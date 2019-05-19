@@ -1,1 +1,0 @@
-# _deepin-file-control
