@@ -1,5 +1,21 @@
 #include"Judge.h"
 #include"Client.h"
+#include"GetLocalInfo.h"
+#include "ReadWrite.h"
+
+int  JudgeConnect(const char* IP, const int port, int & flag) {
+    if(flag == 0) {
+        return 0;
+    }
+    int ret = Connect(IP, port) ;
+    if(ret < 0) {
+         printError(__FILE__, __LINE__);
+         return -1 ;
+    }
+    return ret ;
+}
+
+
 int IsExist(Msg msg, int msgId) {
 
     int fd = -1 ;
@@ -39,11 +55,9 @@ int IsExist(Msg msg, int msgId) {
 
 //验证是否为监控的目录
 int IsMonitorDir(const char* hookPath, const char* monitorPath) {
-    
     int i = 1 ;
     while(1) {
-        //判断绝对路径第一个目录名一致的话，就辨明在监控目录下
-        if(hookPath[i] == '/' && monitorPath[i] == '/') {
+        if((size_t)i == strlen(monitorPath)) {
             break ;
         }
         if(hookPath[i] != monitorPath[i]) {
@@ -97,4 +111,32 @@ int IsLastRecoverRequest(Msg& msg, map<string, int>&recFile) {
         return 1 ;
     }
     return 0 ;
+}
+
+int IsConnect(int &servFd,int msgId,int pid, const char*argv, const int port) {
+    
+    //判断域服务器是否断开连接
+    struct tcp_info info ;
+    int len = sizeof(info) ;
+    //获取与服务器的连接状态！
+    getsockopt(servFd, IPPROTO_TCP, TCP_INFO, &info, (socklen_t*)&len) ;
+    //连接正常返回
+    if(info.tcpi_state == TCP_ESTABLISHED) {
+        return 1 ;      
+    }
+    //已经被断开连接的话就重新建立连接！
+    else {
+        printf("重新连接服务器\n");        
+
+        if((servFd = Connect(argv, port)) == 0) {
+            Msg msg ;
+            msg.type = pid ;
+            msg.buf.type = FAIL ;
+            if(IpcMsgSend(msgId, msg) == 0) {
+                printError(__FILE__, __LINE__) ;
+            }
+            return  0 ;
+        }
+        return servFd;
+    }
 }

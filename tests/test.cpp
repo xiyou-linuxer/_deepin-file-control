@@ -11,6 +11,12 @@ int main(int argc,char *argv[])
     if(fd < 0) {
         exit(1) ;
     }
+    char buf[100] ;
+    int ret ;
+
+    if((ret = read(fd, buf, sizeof(buf)))) {
+        printf("%s", buf) ;
+    }
     printf("修改文件内容完成，继续恢复文件内容...\n") ;
     getchar();
     close(fd) ;

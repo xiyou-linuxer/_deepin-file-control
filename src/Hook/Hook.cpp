@@ -18,7 +18,7 @@
 #define OPEN 1  //open请求
 #define CLOSE 2 //close请求
 #define FINISH 3//文件修改完成应答
-#define ALIVE 4 //客户端与服务器连接断开应答
+#define FAIL 4 //客户端与服务器连接断开应答
 #define INVALID 5//文件非监控目录应答
 #define ACCESS 6//返回文件是否存在应答
 
@@ -103,7 +103,6 @@ int open(const char *s1,int flags,...)
     msg.buf.pid = getpid();
     msg.buf.type = OPEN;
     
-    printf("发送OPEN请求:文件绝对路径:%s 消息队列消息类型%ld 进程ID%d\n",msg.buf.pathname,msg.type,msg.buf.pid);
 
 
     if (msgsnd(msgid, (void *)&msg, sizeof(msg) - sizeof(long), 0) < 0) {
@@ -119,16 +118,15 @@ int open(const char *s1,int flags,...)
     while(1) {
         int i = 0;
         if((i = msgrcv(msgid,&Recv_msg,sizeof(Recv_msg) - sizeof(long),getpid(),0)) > 0) {
-            printf("\nOPEN:客户端返回消息类型:");
             switch(Recv_msg.buf.type) {
-                case ALIVE:
+                case FAIL:
                     printf("alive\n");
                     //服务器与客户端连接已断开，拒绝任何程序打开监控目录下的所有文件
                     return -1;
                 case INVALID:
                     printf("invalid\n");
                     //文件非监控目录下,直接返回其描述符
-                    break;
+                    break ;
                 case FINISH:
                     printf("finish\n");
                     //服务器已备份完文件内容，可返回文件描述符
@@ -178,7 +176,6 @@ int close(int fd)
     get_file_name(fd,msg.buf.pathname);
 
     
-    printf("发送CLOSE请求:文件绝对路径:%s 消息队列消息类型%ld 进程ID%d\n",msg.buf.pathname,msg.type,msg.buf.pid);
     if (msgsnd(msgid, &msg, sizeof(msg) - sizeof(long), 0) == -1) {
         perror("msgsnd()");
         exit(1);
@@ -188,10 +185,9 @@ int close(int fd)
     struct msg_queue Recv_msg;
     
     if(msgrcv(msgid,&Recv_msg,sizeof(Recv_msg) - sizeof(long),getpid(),0) != -1) {
-        printf("\nCLOSE:客户端返回消息类型:");
         switch(Recv_msg.buf.type) {
-            case ALIVE:
-                printf("alive\n");
+            case FAIL:
+                printf("FAIL\n");
                 //服务器与客户端连接已断开，拒绝任何程序关闭监控目录下的所有文件
                 return -1;
             case FINISH:

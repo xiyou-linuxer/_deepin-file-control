@@ -43,7 +43,5 @@ int IpcMsgRecv(int msgid, Msg& data) {
         perror("msgrcv") ;
         return 0 ;
     }
-    printf("%d\n", data.buf.pid) ;
-    printf("%s\n", data.buf.pathName) ;
     return 1 ;
 }
