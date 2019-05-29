@@ -85,7 +85,6 @@ int open(const char *s1,int flags,...)
         tmp = va_arg(va,int); 
         va_end(va);
     }
-    printf("open(%s,%d,%d)\n",s1,flags,tmp);
 
 
     struct msg_queue msg;
@@ -120,19 +119,15 @@ int open(const char *s1,int flags,...)
         if((i = msgrcv(msgid,&Recv_msg,sizeof(Recv_msg) - sizeof(long),getpid(),0)) > 0) {
             switch(Recv_msg.buf.type) {
                 case FAIL:
-                    printf("alive\n");
                     //服务器与客户端连接已断开，拒绝任何程序打开监控目录下的所有文件
                     return -1;
                 case INVALID:
-                    printf("invalid\n");
                     //文件非监控目录下,直接返回其描述符
                     break ;
                 case FINISH:
-                    printf("finish\n");
                     //服务器已备份完文件内容，可返回文件描述符
                     break; 
                 case ACCESS:
-                    printf("access\n");
                     return -1;
             }
         }
@@ -149,11 +144,9 @@ int open(const char *s1,int flags,...)
     }
 
     if(tmp) {
-        printf("open2\n");
         return old_open(s1,flags,tmp);
     }
     else {
-        printf("open\n");
         return old_open(s1,flags);   
     }
 }
@@ -187,15 +180,12 @@ int close(int fd)
     if(msgrcv(msgid,&Recv_msg,sizeof(Recv_msg) - sizeof(long),getpid(),0) != -1) {
         switch(Recv_msg.buf.type) {
             case FAIL:
-                printf("FAIL\n");
                 //服务器与客户端连接已断开，拒绝任何程序关闭监控目录下的所有文件
                 return -1;
             case FINISH:
-                printf("finish\n");
                 //服务器已恢复完文件内容，可正常返回
                 break;
             case ACCESS:
-                printf("access\n");
                 //文件非监控目录，正常返回
                 break;
         }

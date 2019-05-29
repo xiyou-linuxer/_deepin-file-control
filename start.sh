@@ -1,5 +1,5 @@
 #!/bin/bash
-cd ./src/Server/V_3;
+cd ./src/Server/;
 make;
 cd -;
 cd ./src/Client/;

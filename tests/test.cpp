@@ -6,7 +6,7 @@
 #define LEN 1024
 int main(int argc,char *argv[])
 {
-    int fd = open("test", O_RDWR) ;
+    int fd = open("1.txt", O_RDWR) ;
 
     if(fd < 0) {
         exit(1) ;

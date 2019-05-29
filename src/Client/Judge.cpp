@@ -89,7 +89,6 @@ int IsStoragedFile(Msg msg, map<string, int>&stFiles) {
     }
     map<string, int>::iterator iters;
     for(iters = stFiles.begin(); iters != stFiles.end(); iters++) {
-        printf("key=%s    value=%d\n", iters->first.c_str(), iters->second) ;
     }
 }
 
@@ -126,7 +125,6 @@ int IsConnect(int &servFd,int msgId,int pid, const char*argv, const int port) {
     }
     //已经被断开连接的话就重新建立连接！
     else {
-        printf("重新连接服务器\n");        
 
         if((servFd = Connect(argv, port)) == 0) {
             Msg msg ;
