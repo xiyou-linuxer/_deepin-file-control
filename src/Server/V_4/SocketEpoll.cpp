@@ -132,7 +132,6 @@ void Epoll::eventdelfd(int efd, struct basic *ev) {
   if (ev->status != 1) return;
   pev.data.ptr = ev;
   ev->status = 0;
-  cout << "efd: " << efd << "fd: " << ev->fd << endl;
   if (epoll_ctl(efd, EPOLL_CTL_DEL, ev->fd, &pev) < 0) {
     cout << "epoll_ctldel err: " << __func__ << "errno: " << strerror(errno)
          << endl;

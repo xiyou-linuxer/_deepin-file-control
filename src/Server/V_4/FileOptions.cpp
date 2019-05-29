@@ -156,7 +156,6 @@ void File_Opt::Close_send(int sockfd, struct basic *bufp) {
     unsigned int value;
     ins >> key >> value;
     if (!key.length()) continue;
-    cout << "key" << key << "value" << value << endl;
     file.insert(make_pair(key, value));
   }
   ins.close();
@@ -166,7 +165,6 @@ void File_Opt::Close_send(int sockfd, struct basic *bufp) {
   if (ret != file.end()) {
     char name[1024] = {0};
     sprintf(name, "%x", ret->second);
-    cout << "name close: " << name << endl;
     int fd = open(name, O_RDONLY);
     if (fd < 0) ERR_EXIT("open");
     int n;
@@ -182,6 +180,7 @@ void File_Opt::Close_send(int sockfd, struct basic *bufp) {
       bufp->bufp.Rtype = CLOSE;
     }
     close(fd);
+    cout<<"文件发送完毕"<<endl;
     //发送结束符
     memset(&bufp->bufp.buf, 0, sizeof(bufp->bufp.buf));
     strcpy(bufp->bufp.buf, "EOF");

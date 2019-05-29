@@ -5,7 +5,7 @@
 using std::exception;
 
 const int Length = 1000;
-const int Time_interval = 5;
+const int Time_interval = 600;
 class Heap_Timer;
 
 //客户端数据结构
