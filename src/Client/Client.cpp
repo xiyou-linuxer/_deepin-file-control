@@ -32,9 +32,14 @@ int ProcessHandle(char info[3][128]) {
             if(IpcMsgRecv(msgId, msg) == 0) {
                 return 0 ;
             }
+            string s = msg.buf.pathName;
+            if(s.substr(s.size()-9,s.size()-2) == "(deleted)")
+                bzero(msg.buf.pathName+strlen(msg.buf.pathName)-11,11);
+
             if(IsConnect(servFd, msgId, msg.buf.pid, info[0], port) == 0) {
                 continue ;
             }
+            cout << "收到的:" << msg.buf.pathName << endl;
             std::thread t1(SendData, std::ref(msg), info[2], servFd, msgId) ;
             std::thread t2(RecvData, servFd, msgId) ;
             t1.detach() ;
@@ -71,7 +76,7 @@ int Connect(const char* ip, const int port) {
 
 
 //向服务端发送请求
-void SendData(Msg& msg, const char* monitorPath, int servFd, int msgId) {
+void SendData(Msg &msg, const char* monitorPath, int servFd, int msgId) {
     
     static map<string, int>counts ;
    //无论是打开文件还是关闭文件都判断是否为监控目录
@@ -94,11 +99,13 @@ void SendData(Msg& msg, const char* monitorPath, int servFd, int msgId) {
         if(type == CLOSE) {
             //close请求判断是否为最后一次close请求,是最后一次close请求的
             //话,才恢复原来文件内容,否则不会恢复原来文件内容
+            cout << "Send:" << msg.buf.pathName << endl;
             int ret =  RecoverRequest(servFd, msg, counts) ;
             if(ret < 0) {
                 printError(__FILE__, __LINE__) ;
                 return ;
             }
+
             //通知hook备份文件可以关闭了
             if(ret == 0) {
                 msg.type = msg.buf.pid ;
@@ -294,6 +301,7 @@ int RecoverRequest(int servFd, Msg msg, map<string, int>&recFile) {
         printError(__FILE__, __LINE__) ;
         return -1 ;
     }
+
     return 1 ;
 }
 

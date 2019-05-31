@@ -70,7 +70,7 @@ int ProcessHandle(char argv[3][128]) ;
 //连接服务器
 int Connect(const char* ip, const int port) ;
 //向服务端发送请求
-void SendData(Msg& msg, const char*monitorPath, int servFd, int msgId) ;
+void SendData(Msg &msg, const char*monitorPath, int servFd, int msgId) ;
 //接收服务端请求
 int RecvData(int recvFd, int msgId) ;
 //给服务器发送文件内容
