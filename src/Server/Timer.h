@@ -5,11 +5,7 @@
 using std::exception;
 
 const int Length = 1000;
-<<<<<<< HEAD:src/Server/V_4/Timer.h
 const int Time_interval = 600;
-=======
-const int Time_interval = 100000;
->>>>>>> 4285bb6b91b4082bb11c726dfc71fd4c2a0a4a98:src/Server/Timer.h
 class Heap_Timer;
 
 //客户端数据结构

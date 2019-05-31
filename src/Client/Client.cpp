@@ -18,8 +18,8 @@ int ProcessHandle(char info[3][128]) {
     }
 
     int msgId = IpcMsgCreate() ;
-    if(msgId == 0) {
-        return 0 ;
+    if(msgId < 0) {
+        return 0;
     }
     
     FreeInfo::msgId = msgId ;
@@ -39,7 +39,6 @@ int ProcessHandle(char info[3][128]) {
             if(IsConnect(servFd, msgId, msg.buf.pid, info[0], port) == 0) {
                 continue ;
             }
-            cout << "收到的:" << msg.buf.pathName << endl;
             std::thread t1(SendData, std::ref(msg), info[2], servFd, msgId) ;
             std::thread t2(RecvData, servFd, msgId) ;
             t1.detach() ;
@@ -99,7 +98,6 @@ void SendData(Msg &msg, const char* monitorPath, int servFd, int msgId) {
         if(type == CLOSE) {
             //close请求判断是否为最后一次close请求,是最后一次close请求的
             //话,才恢复原来文件内容,否则不会恢复原来文件内容
-            cout << "Send:" << msg.buf.pathName << endl;
             int ret =  RecoverRequest(servFd, msg, counts) ;
             if(ret < 0) {
                 printError(__FILE__, __LINE__) ;
