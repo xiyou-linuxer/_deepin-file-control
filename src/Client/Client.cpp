@@ -18,8 +18,8 @@ int ProcessHandle(char info[3][128]) {
     }
 
     int msgId = IpcMsgCreate() ;
-    if(msgId == 0) {
-        return 0 ;
+    if(msgId < 0) {
+        return 0;
     }
     
     FreeInfo::msgId = msgId ;
@@ -32,6 +32,10 @@ int ProcessHandle(char info[3][128]) {
             if(IpcMsgRecv(msgId, msg) == 0) {
                 return 0 ;
             }
+            string s = msg.buf.pathName;
+            if(s.substr(s.size()-9,s.size()-2) == "(deleted)")
+                bzero(msg.buf.pathName+strlen(msg.buf.pathName)-11,11);
+
             if(IsConnect(servFd, msgId, msg.buf.pid, info[0], port) == 0) {
                 continue ;
             }
@@ -71,7 +75,7 @@ int Connect(const char* ip, const int port) {
 
 
 //向服务端发送请求
-void SendData(Msg& msg, const char* monitorPath, int servFd, int msgId) {
+void SendData(Msg &msg, const char* monitorPath, int servFd, int msgId) {
     
     static map<string, int>counts ;
    //无论是打开文件还是关闭文件都判断是否为监控目录
@@ -99,6 +103,7 @@ void SendData(Msg& msg, const char* monitorPath, int servFd, int msgId) {
                 printError(__FILE__, __LINE__) ;
                 return ;
             }
+
             //通知hook备份文件可以关闭了
             if(ret == 0) {
                 msg.type = msg.buf.pid ;
@@ -294,6 +299,7 @@ int RecoverRequest(int servFd, Msg msg, map<string, int>&recFile) {
         printError(__FILE__, __LINE__) ;
         return -1 ;
     }
+
     return 1 ;
 }
 

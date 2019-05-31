@@ -10,7 +10,7 @@ int IpcMsgCreate() {
     int msgid = msgget(key, IPC_CREAT|IPC_EXCL|0666) ;
     if(msgid < 0) {
         perror("msgget") ;
-        return 0 ;
+        return msgid ;
     }
     return msgid ;
 }

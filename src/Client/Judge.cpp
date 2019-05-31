@@ -94,8 +94,9 @@ int IsStoragedFile(Msg msg, map<string, int>&stFiles) {
 
 //判断是否是最后一次close请求
 int IsLastRecoverRequest(Msg& msg, map<string, int>&recFile) {
-        
+    
     map<string, int>::iterator iter = recFile.find(msg.buf.pathName);
+
     if(iter != recFile.end()) {
          iter->second -- ;          
     }
