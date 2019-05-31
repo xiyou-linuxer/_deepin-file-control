@@ -37,7 +37,6 @@ int main(int argc, char *argv[]) {
       if (_basic[pos].status != 1) continue;
       time = &_basic[pos];
       timer = users[time->fd].timer;
-      cout << time->fd << endl;
       if (timer) t.tick(f, time);
     }
     int ret = epoll_wait(efd, events, MAX_EVENTS + 1, 1000);

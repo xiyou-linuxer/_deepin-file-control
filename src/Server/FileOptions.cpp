@@ -24,6 +24,7 @@ void File_Opt::recvdata(int sockfd, int events, void *arg) {
   time_t cur_time;
   memset(&ev->bufp, 0, sizeof(ev->bufp));
   int sn = readn(sockfd, &ev->bufp, sizeof(ev->bufp));
+  cout << "已经收到客户端请求" << endl;
   if (ev->bufp.Rtype == CLOSE) eventdelfd(efd, ev);
   if (sn > 0) {
     switch (ev->bufp.Rtype) {
@@ -81,63 +82,41 @@ void File_Opt::Open_recv(int sockfd, struct basic *bufp) {
   int len = strlen(bufp->bufp.Amac);
   bufp->bufp.Amac[len - 1] = '\0';
   sprintf(buf, "%s+%s", bufp->bufp.Amac, bufp->bufp.pathname);
-
-  //读取本地别名文件
-  ifstream ins("mapdd.txt", ios::in | ios::out);
-  while (!ins.eof()) {
-    string key;
-    unsigned value;
-    ins >> key >> value;
-    if (!key.length()) continue;
-    file.insert(make_pair(key, value));
-  }
-  ins.close();
-  map<string, unsigned int>::iterator itret = file.find(buf);
-
-  //判断之前是否被备份过
-  if (itret == file.end()) {
-    auto ret = file.insert(make_pair(buf, num));
-    char name[1024] = {0};
-    sprintf(name, "%x", (unsigned int)num);
-    char cwd[1024] = {0};
-    if ((fd = open(name, O_CREAT | O_RDWR, 0666)) < 0) ERR_EXIT("open err");
-    int c = writen(fd, bufp->bufp.buf, bufp->bufp.right - bufp->bufp.left);
-    int rdret;
-    int count = 0;
-    while ((rdret = readn(sockfd, &bufp->bufp, sizeof(struct packet))) > 0) {
-      if (rdret == -1) {
-        cout << "readn 2 err" << endl;
-        return;
-      }
-      if (!strcmp(bufp->bufp.buf, "EOF")) {
-        break;
-      }
-      int len = bufp->bufp.right - bufp->bufp.left;
-      lseek(fd, bufp->bufp.left, SEEK_SET);
-      int wret = writen(fd, bufp->bufp.buf, len);
-      count += wret;
+  auto ret = file.insert(make_pair(buf, num));
+  char name[1024] = {0};
+  sprintf(name, "%x", (unsigned int)num);
+  char cwd[1024] = {0};
+  if ((fd = open(name, O_CREAT | O_RDWR, 0666)) < 0) ERR_EXIT("open err");
+  int c = writen(fd, bufp->bufp.buf, bufp->bufp.right - bufp->bufp.left);
+  int rdret;
+  int count = 0;
+  while ((rdret = readn(sockfd, &bufp->bufp, sizeof(struct packet))) > 0) {
+    if (rdret == -1) {
+      cout << "readn 2 err" << endl;
+      return;
     }
-    close(fd);
-    //从epoll删除套接字，并将套接字置为可读
-    eventdelfd(efd, bufp);
-    eventset(bufp, sockfd, File_Send_Print, bufp);
-    eventaddfd(efd, EPOLLOUT | EPOLLET | EPOLLONESHOT, bufp);
-    time_t cur_time = bufp->last_active;
-    timer->expire = cur_time + Time_interval;
-    char maptxt[1024];
-    ofstream wr("mapdd.txt", ios::app | ios::in | ios::out);
-    sprintf(maptxt, "%s %ld", buf, num);
-    wr << maptxt << "\n";
-    wr.close();
-    cout << "接收文件完毕" << endl;
-    num++;
-  } else {
-    cout << "文件名存在,发送it's a secret" << endl;
-    char secret[] = "It's a sercet!";
-    strcpy(bufp->bufp.buf, secret);
-    if (writen(sockfd, &bufp->bufp, sizeof(struct packet)) < 0)
-      ERR_EXIT("write server");
+    if (!strcmp(bufp->bufp.buf, "EOF")) {
+      break;
+    }
+    int len = bufp->bufp.right - bufp->bufp.left;
+    lseek(fd, bufp->bufp.left, SEEK_SET);
+    int wret = writen(fd, bufp->bufp.buf, len);
+    count += wret;
   }
+  close(fd);
+  //从epoll删除套接字，并将套接字置为可读
+  eventdelfd(efd, bufp);
+  eventset(bufp, sockfd, File_Send_Print, bufp);
+  eventaddfd(efd, EPOLLOUT | EPOLLET | EPOLLONESHOT, bufp);
+  time_t cur_time = bufp->last_active;
+  timer->expire = cur_time + Time_interval;
+  char maptxt[1024];
+  ofstream wr("mapdd.txt", ios::app | ios::in | ios::out);
+  sprintf(maptxt, "%s %ld", buf, num);
+  wr << maptxt << "\n";
+  wr.close();
+  cout << "接收文件完毕" << endl;
+  num++;
 }
 
 //处理关闭请求
@@ -172,7 +151,6 @@ void File_Opt::Close_send(int sockfd, struct basic *bufp) {
     while ((n = read(fd, bufp->bufp.buf, sizeof(bufp->bufp.buf))) > 0) {
       if (n > 0) {
         bufp->bufp.left = len;
-
         len += n;
         bufp->bufp.right = len;
         int wret = writen(sockfd, &bufp->bufp, sizeof(bufp->bufp));
@@ -180,7 +158,7 @@ void File_Opt::Close_send(int sockfd, struct basic *bufp) {
       bufp->bufp.Rtype = CLOSE;
     }
     close(fd);
-    cout<<"文件发送完毕"<<endl;
+    cout << "文件发送完毕" << endl;
     //发送结束符
     memset(&bufp->bufp.buf, 0, sizeof(bufp->bufp.buf));
     strcpy(bufp->bufp.buf, "EOF");
@@ -231,7 +209,7 @@ void File_Opt::Open_send(int sockfd, struct basic *bufp) {
     if (timer) t.del_timer(timer);
     return;
   }
-
+  cout << "已发送特定内容" << endl;
   eventdelfd(efd, bufp);
   eventset(bufp, sockfd, File_Recv_Print, bufp);
   eventaddfd(efd, EPOLLOPTION, bufp);
